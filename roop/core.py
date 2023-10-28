@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import cv2
 import sys
 import shutil
 # single thread doubles cuda performance - needs to be set before torch import
@@ -187,9 +188,11 @@ def live_swap(frame, swap_mode, use_clip, clip_text, selected_index = 0):
     
     options = ProcessOptions(get_processing_plugins(use_clip), roop.globals.distance_threshold, roop.globals.blend_ratio, swap_mode, selected_index, clip_text)
     process_mgr.initialize(roop.globals.INPUT_FACESETS, roop.globals.TARGET_FACES, options)
+    frame = cv2.copyMakeBorder(frame, process_mgr.IMG_PAD[0], process_mgr.IMG_PAD[1], process_mgr.IMG_PAD[2], process_mgr.IMG_PAD[3], cv2.BORDER_CONSTANT)
     newframe = process_mgr.process_frame(frame)
     if newframe is None:
         return frame
+    newframe = newframe[process_mgr.IMG_PAD[0]:newframe.shape[0]-process_mgr.IMG_PAD[1], process_mgr.IMG_PAD[2]:newframe.shape[1]-process_mgr.IMG_PAD[3]]
     return newframe
 
 
@@ -291,7 +294,7 @@ def batch_process(files:list[ProcessEntry], use_clip, new_clip_text, use_new_met
                     print("Resorting frames to create video")
                     util.sort_rename_frames(extract_path)                                    
                 
-                ffmpeg.create_video(v.filename, f.finalname, fps)
+                ffmpeg.create_video(v.filename, v.finalname, fps)
                 if not roop.globals.keep_frames:
                     util.delete_temp_frames(temp_frame_paths[0])
             else:
