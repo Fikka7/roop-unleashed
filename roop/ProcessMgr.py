@@ -39,7 +39,8 @@ class ProcessMgr():
 
     processors = []
     options : ProcessOptions = None
-    
+   
+    IMG_PAD = [100,100,100,100]
     num_threads = 1
     current_index = 0
     processing_threads = 1
@@ -126,8 +127,10 @@ class ProcessMgr():
                 return
             
             temp_frame = cv2.imread(f)
+            temp_frame = cv2.copyMakeBorder(temp_frame, self.IMG_PAD[0], self.IMG_PAD[1], self.IMG_PAD[2], self.IMG_PAD[3], cv2.BORDER_CONSTANT)
             if temp_frame is not None:
                 resimg = self.process_frame(temp_frame)
+                resimg = resimg[self.IMG_PAD[0]:resimg.shape[0]-self.IMG_PAD[1], self.IMG_PAD[2]:resimg.shape[1]-self.IMG_PAD[3]]
                 if resimg is not None:
                     i = source_files.index(f)
                     cv2.imwrite(target_files[i], resimg)
@@ -165,7 +168,9 @@ class ProcessMgr():
                 self.processed_queue[threadindex].put((False, None))
                 return
             else:
+                frame = cv2.copyMakeBorder(frame, self.IMG_PAD[0], self.IMG_PAD[1], self.IMG_PAD[2], self.IMG_PAD[3], cv2.BORDER_CONSTANT)
                 resimg = self.process_frame(frame)
+                resimg = resimg[self.IMG_PAD[0]:resimg.shape[0]-self.IMG_PAD[1], self.IMG_PAD[2]:resimg.shape[1]-self.IMG_PAD[3]]
                 self.processed_queue[threadindex].put((True, resimg))
                 del frame
                 progress()
