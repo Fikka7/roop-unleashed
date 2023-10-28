@@ -65,14 +65,14 @@ def extract_frames(target_path : str, trim_frame_start, trim_frame_end, fps : fl
     commands = ['-i', target_path, '-q:v', '1', '-pix_fmt', 'rgb24', ]
     if trim_frame_start is not None and trim_frame_end is not None:
         commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(fps) ])
-    commands.extend(['-vsync', '0', os.path.join(temp_directory_path, '%04d.' + roop.globals.CFG.output_image_format)])
+    commands.extend(['-vsync', '0', os.path.join(temp_directory_path, '%09d.' + roop.globals.CFG.output_image_format)])
     return run_ffmpeg(commands)
 
 
 def create_video(target_path: str, dest_filename: str, fps: float = 24.0, temp_directory_path: str = None) -> None:
     if temp_directory_path is None:
         temp_directory_path = util.get_temp_directory_path(target_path)
-    run_ffmpeg(['-r', str(fps), '-i', os.path.join(temp_directory_path, f'%04d.{roop.globals.CFG.output_image_format}'), '-c:v', roop.globals.video_encoder, '-crf', str(roop.globals.video_quality), '-pix_fmt', 'yuv420p', '-vf', 'colorspace=bt709:iall=bt601-6-625:fast=1', '-y', dest_filename])
+    run_ffmpeg(['-r', str(fps), '-i', os.path.join(temp_directory_path, f'%09d.{roop.globals.CFG.output_image_format}'), '-c:v', roop.globals.video_encoder, '-crf', str(roop.globals.video_quality), '-pix_fmt', 'yuv420p', '-vf', 'colorspace=bt709:iall=bt601-6-625:fast=1', '-y', dest_filename])
     return dest_filename
 
 
@@ -82,7 +82,7 @@ def create_gif_from_video(video_path: str, gif_path):
     fps = util.detect_fps(video_path)
     frame = get_video_frame(video_path)
 
-    run_ffmpeg(['-i', video_path, '-vf', f'fps={fps},scale={frame.shape[0]}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse', '-loop', '0', gif_path])
+    run_ffmpeg(['-i', video_path, '-vf', f'fps={fps},scale={frame.shape[1]}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse', '-loop', '0', gif_path])
 
 
 def restore_audio(intermediate_video: str, original_video: str, trim_frame_start, trim_frame_end, final_video : str) -> None:
